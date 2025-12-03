@@ -1,0 +1,75 @@
+# Example: Webhook Health Check Workflow
+#
+# This workflow runs periodically to check webhook health
+# and can optionally post results to PRs.
+
+name: Webhook Health Check
+
+on:
+  # Run on push to main
+  push:
+    branches: [main]
+
+  # Run on PRs
+  pull_request:
+
+  # Run every 6 hours
+  schedule:
+    - cron: '0 */6 * * *'
+
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  check-webhooks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Webhook Health
+        id: health
+        uses: eventdock/webhook-health-action@v1
+        with:
+          # Required: Your EventDock API key (JWT token)
+          api-key: ${{ secrets.EVENTDOCK_API_KEY }}
+
+          # Optional: Check specific endpoint only
+          # endpoint-id: ep_abc123
+
+          # Optional: Fail if success rate is below threshold
+          fail-on-unhealthy: 'true'
+          fail-threshold: '90'
+
+          # Optional: Post health report as PR comment
+          post-comment: ${{ github.event_name == 'pull_request' }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Use the outputs in subsequent steps
+      - name: Print Results
+        run: |
+          echo "Webhook Health Status: ${{ steps.health.outputs.status }}"
+          echo "Success Rate: ${{ steps.health.outputs.success-rate }}%"
+          echo "Total Events (24h): ${{ steps.health.outputs.total-events }}"
+          echo "Delivered: ${{ steps.health.outputs.delivered-events }}"
+          echo "Failed: ${{ steps.health.outputs.failed-events }}"
+          echo "In DLQ: ${{ steps.health.outputs.dlq-count }}"
+          echo "Endpoints Checked: ${{ steps.health.outputs.endpoints-checked }}"
+
+      # Optional: Send Slack notification on failure
+      - name: Notify Slack on Failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "⚠️ Webhook Health Check Failed",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Webhook Health Check Failed*\nSuccess rate: ${{ steps.health.outputs.success-rate }}%\nStatus: ${{ steps.health.outputs.status }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

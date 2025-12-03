@@ -1,0 +1,55 @@
+name: 'EventDock Webhook Health Check'
+description: 'Check the health of your webhook endpoints and get delivery statistics'
+author: 'EventDock'
+branding:
+  icon: 'activity'
+  color: 'purple'
+
+inputs:
+  api-key:
+    description: 'Your EventDock API key'
+    required: true
+  endpoint-id:
+    description: 'Specific endpoint ID to check (optional - checks all if not provided)'
+    required: false
+  api-url:
+    description: 'EventDock API URL (default: https://api.eventdock.app)'
+    required: false
+    default: 'https://api.eventdock.app'
+  fail-on-unhealthy:
+    description: 'Fail the workflow if endpoints are unhealthy'
+    required: false
+    default: 'false'
+  fail-threshold:
+    description: 'Success rate percentage below which to fail (0-100)'
+    required: false
+    default: '90'
+  post-comment:
+    description: 'Post a comment to the PR with webhook stats'
+    required: false
+    default: 'false'
+  github-token:
+    description: 'GitHub token for posting PR comments (required if post-comment is true)'
+    required: false
+
+outputs:
+  status:
+    description: 'Overall health status (healthy, degraded, unhealthy)'
+  success-rate:
+    description: 'Delivery success rate percentage (last 24h)'
+  total-events:
+    description: 'Total events in the last 24h'
+  delivered-events:
+    description: 'Successfully delivered events in the last 24h'
+  failed-events:
+    description: 'Failed events in the last 24h'
+  dlq-count:
+    description: 'Events currently in the dead letter queue'
+  endpoints-checked:
+    description: 'Number of endpoints checked'
+  report:
+    description: 'Full markdown report of webhook health'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'

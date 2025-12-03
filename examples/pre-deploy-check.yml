@@ -1,0 +1,49 @@
+# Example: Pre-Deployment Health Check
+#
+# Run webhook health check before deploying to ensure
+# your webhook infrastructure is healthy.
+
+name: Deploy with Health Check
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  # First, verify webhook health
+  pre-deploy-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Webhook Health
+        uses: eventdock/webhook-health-action@v1
+        with:
+          api-key: ${{ secrets.EVENTDOCK_API_KEY }}
+          fail-on-unhealthy: 'true'
+          fail-threshold: '95'  # Strict threshold before deploy
+
+  # Only deploy if webhooks are healthy
+  deploy:
+    needs: pre-deploy-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy Application
+        run: |
+          echo "Deploying application..."
+          # Your deployment commands here
+
+  # Post-deploy verification
+  post-deploy-check:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for deployment to stabilize
+        run: sleep 60
+
+      - name: Verify Webhook Health Post-Deploy
+        uses: eventdock/webhook-health-action@v1
+        with:
+          api-key: ${{ secrets.EVENTDOCK_API_KEY }}
+          fail-on-unhealthy: 'true'
+          fail-threshold: '90'
