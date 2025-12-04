@@ -180,20 +180,25 @@ async function run() {
       }
     }
 
-    // Log summary
-    core.summary
-      .addHeading('EventDock Webhook Health')
-      .addTable([
-        [{data: 'Metric', header: true}, {data: 'Value', header: true}],
-        ['Status', status.toUpperCase()],
-        ['Success Rate', `${stats.success_rate.toFixed(2)}%`],
-        ['Total Events (24h)', stats.total_events.toString()],
-        ['Delivered', stats.delivered_events.toString()],
-        ['Failed', stats.failed_events.toString()],
-        ['In DLQ', stats.dlq_count.toString()],
-        ['Endpoints', stats.endpoints_count.toString()]
-      ])
-      .write();
+    // Log summary (only in GitHub Actions environment)
+    try {
+      await core.summary
+        .addHeading('EventDock Webhook Health')
+        .addTable([
+          [{data: 'Metric', header: true}, {data: 'Value', header: true}],
+          ['Status', status.toUpperCase()],
+          ['Success Rate', `${stats.success_rate.toFixed(2)}%`],
+          ['Total Events (24h)', stats.total_events.toString()],
+          ['Delivered', stats.delivered_events.toString()],
+          ['Failed', stats.failed_events.toString()],
+          ['In DLQ', stats.dlq_count.toString()],
+          ['Endpoints', stats.endpoints_count.toString()]
+        ])
+        .write();
+    } catch (e) {
+      // Summary not available outside GitHub Actions
+      core.debug('Job summary not available');
+    }
 
     // Fail if unhealthy and configured to do so
     if (failOnUnhealthy && stats.success_rate < failThreshold) {

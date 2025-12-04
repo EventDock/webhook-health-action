@@ -140,10 +140,16 @@ jobs:
 
 ## Getting Your API Key
 
-1. Sign up at [eventdock.app](https://eventdock.app)
-2. Go to Settings > API Keys
-3. Create a new API key
-4. Add it as a secret in your GitHub repository (`EVENTDOCK_API_KEY`)
+1. Sign up or log in at [dashboard.eventdock.app](https://dashboard.eventdock.app)
+2. Go to **Settings** (click your profile or navigate to `/settings`)
+3. In the **API Keys** section, click **Create API Key**
+4. Give your key a name (e.g., "GitHub Actions")
+5. **Important:** Copy the API key immediately - it will only be shown once!
+6. Add it as a secret in your GitHub repository:
+   - Go to your repo → Settings → Secrets and variables → Actions
+   - Click "New repository secret"
+   - Name: `EVENTDOCK_API_KEY`
+   - Value: Paste your API key (starts with `evdk_`)
 
 ## Health Status Levels
 
