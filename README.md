@@ -1,6 +1,8 @@
 # EventDock Webhook Health Check Action
 
-A GitHub Action that checks the health of your webhook endpoints using EventDock and reports delivery statistics.
+A GitHub Action that checks the health of your webhook endpoints using [EventDock](https://eventdock.app/) and reports delivery statistics.
+
+**[Learn more about EventDock →](https://eventdock.app/)**
 
 ## Features
 
