@@ -1,0 +1,62 @@
+name: Test Action
+
+on:
+  workflow_dispatch:  # Manual trigger only - requires EVENTDOCK_API_KEY secret
+
+jobs:
+  test-unit:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Run tests
+        run: npm test
+        env:
+          EVENTDOCK_API_KEY: ${{ secrets.EVENTDOCK_API_KEY }}
+
+  test-action:
+    name: Test Action (Live)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Test the action from the local repo using ./
+      - name: Run Webhook Health Check
+        id: health
+        uses: ./
+        with:
+          api-key: ${{ secrets.EVENTDOCK_API_KEY }}
+          fail-on-unhealthy: 'false'
+
+      - name: Print outputs
+        run: |
+          echo "Status: ${{ steps.health.outputs.status }}"
+          echo "Success Rate: ${{ steps.health.outputs.success-rate }}%"
+          echo "Total Events: ${{ steps.health.outputs.total-events }}"
+          echo "DLQ Count: ${{ steps.health.outputs.dlq-count }}"
+          echo ""
+          echo "Full Report:"
+          echo "${{ steps.health.outputs.report }}"
+
+  test-action-fail-threshold:
+    name: Test Fail Threshold
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run with high threshold (should pass)
+        uses: ./
+        with:
+          api-key: ${{ secrets.EVENTDOCK_API_KEY }}
+          fail-on-unhealthy: 'true'
+          fail-threshold: '50'  # Very low threshold
